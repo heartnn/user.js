@@ -20,7 +20,6 @@
 // @run-at               document-start
 // @grant                GM_addStyle
 // @license              MIT
-// @downloadURL https://raw.githubusercontent.com/heartnn/user.js/refs/heads/master/Sarasa-Gothic-Font-Substitution-Tool.user.js
 // ==/UserScript==
 
 const LANG_CODE_OBJ = {
@@ -134,7 +133,7 @@ GM_addStyle(`
         * Ace https://ace.c9.io/,
         * CodeMirror https://codemirror.net/ https://codemirror.net/5/,
         * Monaco https://microsoft.github.io/monaco-editor/,
-        * TailwindCSS https://tailwindcss.com/docs/font-family 
+        * TailwindCSS https://tailwindcss.com/docs/font-family
         */
       &:where(code, kbd, pre, samp, var),
       &:where([class*="ace_editor"], [class*="cm-"], [class*="monaco-editor"], [class*="font-mono"]) {
