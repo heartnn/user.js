@@ -4,7 +4,7 @@
 // @version            3.7.9
 // @author             Secant(TYT@NexusHD)
 // @include            http*://movie.douban.com/subject/*
-// @require            https://cdn.jsdelivr.net/npm/jquery@3.4.1/dist/jquery.min.js
+// @require            https://code.jquery.com/jquery-3.4.1.min.js
 // @icon               https://movie.douban.com/favicon.ico
 // @contributionURL    https://i.loli.net/2020/02/28/JPGgHc3UMwXedhv.jpg
 // @contributionAmount 10
