@@ -36,8 +36,8 @@ const LANG_CODE_OBJ = {
 const lang_code = LANG_CODE_OBJ[navigator.language] || "SC"; // Default to SC if not found
 
 const FONT_FAMILY_TYPE = {
-  generic: "var(--icon-font-family),icomoon,iconfont,brand-icons,FontAwesome,genericons,Inconsolata,'Material Icons','Material Icons Extended',dzicon,var(--generic-font-family),system-ui;",
-  code: "var(--icon-font-family),icomoon,iconfont,brand-icons,FontAwesome,genericons,Inconsolata,'Material Icons','Material Icons Extended',dzicon,var(--code-font-family),monospace;",
+  generic: "var(--icon-font-family),dzicon,var(--generic-font-family),system-ui;",
+  code: "var(--icon-font-family),dzicon,var(--code-font-family),monospace;",
 };
 
 const EMOJIS_UNICODE_RANGE = // Unicode CLDR: check https://unicode.org/emoji/charts/emoji-style.txt
