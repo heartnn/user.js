@@ -862,7 +862,7 @@
                     : f.name.chs
                   : f.name.for;
                 return (
-                  (i > 0 ? "　　　　　　" : "") +
+                  (i > 0 ? "　　　　  　" : "") +
                   name +
                   (f.character ? ` | ${f.character}` : "")
                 );
