@@ -779,65 +779,65 @@
     let temp;
     const infoText = (
       (info.poster ? `[img]${info.poster}[/img]\n\n` : "") +
-      "◎译　　名　" +
+      "＋译　　名　" +
       [info.titles.translatedTitle]
         .concat(info.titles.alsoKnownAsTitles)
         .join(" / ") +
       "\n" +
-      "◎片　　名　" +
+      "＋片　　名　" +
       info.titles.originalTitle +
       "\n" +
-      "◎年　　代　" +
+      "＋年　　代　" +
       info.year +
       "\n" +
       (info.regions.length
-        ? "◎产　　地　" + info.regions.join(" / ") + "\n"
+        ? "＋产　　地　" + info.regions.join(" / ") + "\n"
         : "") +
       (info.genres.length
-        ? "◎类　　别　" + info.genres.join(" / ") + "\n"
+        ? "＋类　　别　" + info.genres.join(" / ") + "\n"
         : "") +
       (info.languages.length
-        ? "◎语　　言　" + info.languages.join(" / ") + "\n"
+        ? "＋语　　言　" + info.languages.join(" / ") + "\n"
         : "") +
       (info.releaseDates.length
-        ? "◎上映日期　" + info.releaseDates.join(" / ") + "\n"
+        ? "＋上映日期　" + info.releaseDates.join(" / ") + "\n"
         : "") +
       (info.IMDbScore && info.IMDbScore.rating
-        ? `◎IMDb评星　${((temp = Math.round(info.IMDbScore.rating * 2)),
+        ? `＋IMDb评星　${((temp = Math.round(info.IMDbScore.rating * 2)),
           "★".repeat(Math.floor(temp / 2)) +
           (temp % 2 === 1 ? "✦" : "") +
           "☆".repeat(10 - Math.ceil(temp / 2)))
-        }\n◎IMDb评分　${Number(info.IMDbScore.rating).toFixed(
+        }\n＋IMDb评分　${Number(info.IMDbScore.rating).toFixed(
           1
         )}/10 from ${addComma(info.IMDbScore.ratingCount)} users\n`
         : "") +
       (info.IMDbID
-        ? `◎IMDb链接　https://www.imdb.com/title/${info.IMDbID}/\n`
+        ? `＋IMDb链接　https://www.imdb.com/title/${info.IMDbID}/\n`
         : "") +
       (info.DoubanScore && info.DoubanScore.rating
-        ? `◎豆瓣评星　${((temp = Math.round(info.DoubanScore.rating)),
+        ? `＋豆瓣评星　${((temp = Math.round(info.DoubanScore.rating)),
           "★".repeat(Math.floor(temp / 2)) +
           (temp % 2 === 1 ? "✦" : "") +
           "☆".repeat(5 - Math.ceil(temp / 2)))
-        }\n◎豆瓣评分　${Number(info.DoubanScore.rating).toFixed(
+        }\n＋豆瓣评分　${Number(info.DoubanScore.rating).toFixed(
           1
         )}/10 from ${addComma(info.DoubanScore.ratingCount)} users\n`
         : "") +
       (info.DoubanID
-        ? `◎豆瓣链接　https://movie.douban.com/subject/${info.DoubanID}/\n`
+        ? `＋豆瓣链接　https://movie.douban.com/subject/${info.DoubanID}/\n`
         : "") +
       (info.durations && info.durations.length
-        ? "◎片　　长　" + info.durations.join(" / ") + "\n"
+        ? "＋片　　长　" + info.durations.join(" / ") + "\n"
         : "") +
       (info.episodeDuration
-        ? "◎单集片长　" + info.episodeDuration + "\n"
+        ? "＋单集片长　" + info.episodeDuration + "\n"
         : "") +
-      (info.episodeCount ? "◎集　　数　" + info.episodeCount + "\n" : "") +
+      (info.episodeCount ? "＋集　　数　" + info.episodeCount + "\n" : "") +
       (info.celebrities
         ? Object.entries(info.celebrities)
           .map((e) => {
             const position = e[1].position;
-            let title = "◎";
+            let title = "＋";
             switch (position.length) {
               case 1:
                 title += "　  " + position + "　  　";
@@ -852,7 +852,7 @@
                 title += position + "　";
                 break;
               default:
-                title += position + "\n　　　　  　";
+                title += position + "\n　　　　　　";
             }
             const people = e[1].people
               .map((f, i) => {
@@ -862,7 +862,7 @@
                     : f.name.chs
                   : f.name.for;
                 return (
-                  (i > 0 ? "　　　　  　" : "") +
+                  (i > 0 ? "　　　　　　" : "") +
                   name +
                   (f.character ? ` | ${f.character}` : "")
                 );
@@ -872,12 +872,12 @@
           })
           .join("\n") + "\n\n"
         : "") +
-      (info.tags.length ? "◎标　　签　" + info.tags.join(" | ") + "\n\n" : "") +
+      (info.tags.length ? "＋标　　签　" + info.tags.join(" | ") + "\n\n" : "") +
       (info.description
-        ? "◎简　　介　\n" + info.description.replace(/^|\n/g, "\n　　") + "\n\n"
+        ? "＋简　　介　\n" + info.description.replace(/^|\n/g, "\n　　") + "\n\n"
         : "") +
       (info.awards.length
-        ? "◎获奖情况　\n\n" +
+        ? "＋获奖情况　\n\n" +
         info.awards
           .map((e) => {
             const awardName = "　　" + e.name + " (" + e.year + ")\n";
@@ -892,7 +892,7 @@
       (info.behindTheScene
         ? (info.behindTheScene.classicLineList &&
           info.behindTheScene.classicLineList.length > 0
-          ? "◎台词金句\n\n　　" +
+          ? "＋台词金句\n\n　　" +
           info.behindTheScene.classicLineList
             .map((e) => e.replace(/\r?\n/g, "\n　　"))
             .join("\n　　") +
@@ -900,7 +900,7 @@
           : "") +
         (info.behindTheScene.behindTextList &&
           info.behindTheScene.behindTextList.length > 0
-          ? "◎幕后揭秘\n\n　　" +
+          ? "＋幕后揭秘\n\n　　" +
           info.behindTheScene.behindTextList
             .map((e) =>
               decodeEntities(e)
