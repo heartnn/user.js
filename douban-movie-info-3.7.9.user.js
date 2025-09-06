@@ -4,7 +4,7 @@
 // @version            3.7.9
 // @author             Secant(TYT@NexusHD)
 // @include            http*://movie.douban.com/subject/*
-// @require            https://code.jquery.com/jquery-3.4.1.min.js
+// @require            https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js
 // @icon               https://movie.douban.com/favicon.ico
 // @contributionURL    https://i.loli.net/2020/02/28/JPGgHc3UMwXedhv.jpg
 // @contributionAmount 10
@@ -873,7 +873,7 @@
                   title += position + "　";
                   break;
                 default:
-                  title += position + "\n　　　　　　";
+                  title += position + "\n　　　　  　";
               }
               const people = e[1].people
                 .map((f, i) => {
