@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name               电影信息查询脚本
 // @description        Fetch Douban Description, IMDb information for PT upload
-// @version            3.7.9
+// @version            4.0.9
 // @author             Secant(TYT@NexusHD)
 // @include            http*://movie.douban.com/subject/*
-// @require            https://cdn.staticfile.org/jquery/3.4.1/jquery.min.js
+// @require            https://code.jquery.com/jquery-3.4.1.min.js
 // @icon               https://movie.douban.com/favicon.ico
 // @contributionURL    https://i.loli.net/2020/02/28/JPGgHc3UMwXedhv.jpg
 // @contributionAmount 10
