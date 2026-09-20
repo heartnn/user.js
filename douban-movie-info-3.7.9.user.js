@@ -150,7 +150,7 @@
       return $("#mainpic img")[0].src.replace(
         /^.+(p\d+).+$/,
         (_, p1) =>
-          `https://img9.dou.attt.top/view/photo/l_ratio_poster/public/${p1}.jpg`
+          `https://douban-img.tods.top:8443/?s=9/view/photo/l_ratio_poster/public/${p1}.jpg`
       );
     } catch (e) {
       return null;
