@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         百度网盘链接自动补全并高亮
+// @name         百度网盘链接自动补全
 // @namespace    http://tampermonkey.net/
-// @version      1.3
-// @description  自动识别网页中的百度网盘短链接，补全完整，附加提取码，并转换为新窗口打开的超链接。
+// @version      2.0
+// @description  自动识别网页中的百度网盘短链接，补全完整，附加提取码，并转换为新窗口打开的超链接。完美穿透B站 Shadow DOM。
 // @author       Qwen
 // @match        *://*/*
 // @grant        none
@@ -11,144 +11,236 @@
 (function() {
     'use strict';
 
-    // 1. 注入一点 CSS 样式，让生成的链接更显眼、更好看
-    const style = document.createElement('style');
-    style.textContent = `
+    // 1. 样式定义 (需要注入到每个 Shadow DOM 内部)
+    const CSS_TEXT = `
         .qwen-bd-link {
-            color: #0066cc !important;       /* 经典链接蓝 */
-            text-decoration: underline;      /* 下划线 */
-            cursor: pointer;                 /* 鼠标放上去变小手 */
-            word-break: break-all;           /* 防止长链接撑爆网页排版 */
-            font-weight: bold;               /* 稍微加粗 */
+            color: #0066cc !important;
+            text-decoration: underline;
+            cursor: pointer;
+            word-break: break-all;
+            font-weight: bold;
             transition: color 0.2s;
         }
         .qwen-bd-link:hover {
-            color: #ff9900 !important;       /* 鼠标悬停时变成橙色 */
+            color: #ff9900 !important;
         }
     `;
-    document.head.appendChild(style);
 
-    // 2. 核心正则：匹配百度网盘分享ID和自带提取码
+    // 2. 正则表达式
     const idRegex = /(?<!pan\.baidu\.com\/)(?<!yun\.baidu\.com\/)(?<!baidu\.com\/s\/)(?<![a-zA-Z0-9])(?:\/?s\/)?(1[A-Za-z0-9_-]{22})(?![A-Za-z0-9_-])(?:\?pwd=([A-Za-z0-9]{4}))?/g;
-
-    // 周围文本提取码正则
     const pwdRegex = /(?:提取码|密码|提取密碼|密碼)[：:\s]*([a-zA-Z0-9]{4})/i;
 
-    // 处理单个文本节点，将其拆分为 [普通文本, <a>链接, 普通文本...]
+    // 核心处理逻辑
     function processTextNode(node) {
+        if (node.__qwen_processed) return;
+
         let text = node.nodeValue;
         if (!text) return;
 
         let parent = node.parentElement;
         if (!parent) return;
-        
+
         const tag = parent.tagName;
-        // 过滤掉不需要处理的标签，以及我们自己生成的链接内部文本（防死循环）
         if (['SCRIPT', 'STYLE', 'TEXTAREA', 'INPUT', 'A'].includes(tag)) return;
         if (parent.classList.contains('qwen-bd-link')) return;
 
-        // 快速检查，如果文本中没有可能的ID，直接跳过以提升性能
-        if (!/1[A-Za-z0-9_-]{22}/.test(text)) return;
+        if (!/1[A-Za-z0-9_-]{22}/.test(text)) {
+            node.__qwen_processed = true;
+            return;
+        }
 
-        // 寻找最近的块级父元素（如 DIV, ARTICLE），以便在整个帖子容器中查找提取码
+        // 寻找块级父元素以提取提取码
         let parentBlock = parent;
         while (parentBlock && !['DIV', 'ARTICLE', 'SECTION', 'TD', 'TH', 'LI', 'P', 'PRE', 'BLOCKQUOTE', 'MAIN'].includes(parentBlock.tagName)) {
             parentBlock = parentBlock.parentElement;
         }
-        if (!parentBlock) parentBlock = document.body;
 
-        // 提取密码
+        if (!parentBlock) {
+            // 关键：如果到达了 Shadow Root 的顶部，使用 Shadow Root 作为容器
+            const rootNode = node.getRootNode();
+            if (rootNode && rootNode.nodeType === Node.DOCUMENT_FRAGMENT_NODE && rootNode.host) {
+                parentBlock = rootNode;
+            } else {
+                parentBlock = document.body;
+            }
+        }
+
         const blockText = parentBlock.textContent || '';
         const pwdMatch = blockText.match(pwdRegex);
         const blockPwd = pwdMatch ? pwdMatch[1] : '';
 
         let match;
         let lastIndex = 0;
-        let fragments = []; // 用来存放拆分后的文本和链接碎片
-        
-        idRegex.lastIndex = 0; // 重置正则匹配位置
+        let fragments = [];
 
+        idRegex.lastIndex = 0;
         let hasMatch = false;
+
         while ((match = idRegex.exec(text)) !== null) {
             hasMatch = true;
-            
-            // 把匹配前面的普通文字收集起来
             if (match.index > lastIndex) {
                 fragments.push(document.createTextNode(text.substring(lastIndex, match.index)));
             }
 
-            // 构造完整的 URL
             const id = match[1];
-            const pwd = match[2] || blockPwd; // 优先用自带的，没有就用上下文找到的
+            const pwd = match[2] || blockPwd;
             let fullUrl = `https://pan.baidu.com/s/${id}`;
-            if (pwd) {
-                fullUrl += `?pwd=${pwd}`;
-            }
+            if (pwd) fullUrl += `?pwd=${pwd}`;
 
-            // 创建 <a> 标签
             const a = document.createElement('a');
             a.href = fullUrl;
-            a.target = '_blank';               // 在新窗口打开
-            a.rel = 'noopener noreferrer';     // 安全最佳实践，防止新窗口劫持原窗口
-            a.className = 'qwen-bd-link';      // 加上我们定义的 CSS class
-            a.textContent = fullUrl;           // 显示完整的 URL 文本
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            a.className = 'qwen-bd-link';
+            a.textContent = fullUrl;
+            a.__qwen_processed = true;
 
             fragments.push(a);
-
             lastIndex = match.index + match[0].length;
         }
 
-        if (!hasMatch) return;
+        if (!hasMatch) {
+            node.__qwen_processed = true;
+            return;
+        }
 
-        // 把匹配后面的剩余文字也收集起来
         if (lastIndex < text.length) {
             fragments.push(document.createTextNode(text.substring(lastIndex)));
         }
 
-        // 将收集好的碎片打包，替换掉原来的纯文本节点
         const fragment = document.createDocumentFragment();
         fragments.forEach(f => fragment.appendChild(f));
-        parent.replaceChild(fragment, node);
+
+        if (parent && node.parentNode === parent) {
+            parent.replaceChild(fragment, node);
+        }
     }
 
-    // 辅助函数：扫描指定根节点下的所有文本节点
-    function scanAndProcess(root) {
+    // 扫描当前层的文本节点
+    function scanTextNodes(root) {
         const walker = document.createTreeWalker(
             root,
             NodeFilter.SHOW_TEXT,
-            null,
-            false
+            {
+                acceptNode: function(node) {
+                    if (node.__qwen_processed) return NodeFilter.FILTER_REJECT;
+                    if (!node.nodeValue || !/1[A-Za-z0-9_-]{22}/.test(node.nodeValue)) return NodeFilter.FILTER_REJECT;
+                    return NodeFilter.FILTER_ACCEPT;
+                }
+            }
         );
-        
-        // 先把所有文本节点收集到数组里。
-        // 这一步很关键：因为 processTextNode 会修改 DOM，如果在遍历树时修改，会导致遍历错乱。
+
         const textNodes = [];
-        let node;
-        while (node = walker.nextNode()) {
-            textNodes.push(node);
+        let n;
+        while (n = walker.nextNode()) {
+            textNodes.push(n);
         }
-        
         textNodes.forEach(processTextNode);
     }
 
-    // 3. 页面加载完成后，先处理现有的内容
-    scanAndProcess(document.body);
+    // 深度递归扫描：穿透 Shadow DOM
+    function deepScanAndProcess(node) {
+        if (!node) return;
 
-    // 4. 使用 MutationObserver 监听动态添加的内容（比如论坛懒加载、展开评论等）
-    const observer = new MutationObserver((mutations) => {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+            // 发现 Shadow Host，进入结界！
+            if (node.shadowRoot) {
+                initShadowRoot(node.shadowRoot);
+                deepScanAndProcess(node.shadowRoot);
+            }
+
+            // 遍历普通子元素
+            const children = node.children;
+            for (let i = 0; i < children.length; i++) {
+                deepScanAndProcess(children[i]);
+            }
+        } else if (node.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+            // Shadow Root 本身
+            const children = node.children;
+            for (let i = 0; i < children.length; i++) {
+                deepScanAndProcess(children[i]);
+            }
+        }
+
+        // 扫描当前层的文本
+        scanTextNodes(node);
+    }
+
+    // 初始化 Shadow Root：注入样式和监听器
+    function initShadowRoot(shadowRoot) {
+        if (shadowRoot.__qwen_initialized) return;
+        shadowRoot.__qwen_initialized = true;
+
+        // 1. 注入样式到结界内部
+        const style = document.createElement('style');
+        style.textContent = CSS_TEXT;
+        shadowRoot.appendChild(style);
+
+        // 2. 在结界内部绑定监听器
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(node => {
+                        scheduleProcess(node);
+                    });
+                } else if (mutation.type === 'characterData') {
+                    if (mutation.target.nodeType === Node.TEXT_NODE) {
+                        mutation.target.__qwen_processed = false;
+                        scheduleProcess(mutation.target);
+                    }
+                }
+            });
+        });
+
+        observer.observe(shadowRoot, {
+            childList: true,
+            subtree: true,
+            characterData: true
+        });
+    }
+
+    // 延迟处理队列 (防抖 + 避开框架渲染)
+    let pendingNodes = new Set();
+    let rafId = null;
+
+    function scheduleProcess(node) {
+        pendingNodes.add(node);
+        if (!rafId) {
+            rafId = requestAnimationFrame(() => {
+                rafId = null;
+                const nodesToProcess = Array.from(pendingNodes);
+                pendingNodes.clear();
+
+                nodesToProcess.forEach(n => {
+                    if (n.nodeType === Node.TEXT_NODE) {
+                        processTextNode(n);
+                    } else if (n.nodeType === Node.ELEMENT_NODE || n.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
+                        deepScanAndProcess(n);
+                    }
+                });
+            });
+        }
+    }
+
+    // 全局 Observer：发现新添加的 Shadow Host
+    const globalObserver = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
-            mutation.addedNodes.forEach((node) => {
-                if (node.nodeType === Node.TEXT_NODE) {
-                    processTextNode(node);
-                } else if (node.nodeType === Node.ELEMENT_NODE) {
-                    scanAndProcess(node);
+            mutation.addedNodes.forEach(node => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                    deepScanAndProcess(node);
+                } else if (node.nodeType === Node.TEXT_NODE) {
+                    scheduleProcess(node);
                 }
             });
         });
     });
 
-    observer.observe(document.body, {
+    globalObserver.observe(document.body, {
         childList: true,
         subtree: true
     });
+
+    // 初始扫描
+    deepScanAndProcess(document.body);
+
 })();
